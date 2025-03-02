@@ -1,0 +1,145 @@
+
+
+فكرة المشروع: تطبيق "لقاء الأحبة"
+
+الفكرة الأساسية: تطبيق اجتماعي يهدف إلى تسهيل اللقاءات بين الأصدقاء والعائلة في أماكن معينة، مع إضافة بعض الأنشطة التفاعلية التي تعزز الترحيب والاندماج بينهم.
+
+المزايا الرئيسية للتطبيق:
+
+1. تحديد المواقع: يمكن للمستخدمين تحديد أماكنهم الجغرافية وتحديد أماكن قريبة يمكنهم اللقاء فيها، مثل المقاهي أو الحدائق.
+
+
+2. التوافق بين الأصدقاء: يتمكن المستخدمون من تحديد مواعيد وأماكن اللقاءات مع أصدقائهم أو أفراد عائلاتهم بناءً على توافرهم.
+
+
+3. الترحيب التفاعلي: عند اللقاء، يمكن أن يتضمن التطبيق خيارات للترحيب التفاعلي مثل مقاطع فيديو ترحيبية، رسائل صوتية، أو رسومات تعبيرية تعكس مشاعر الود والترحاب.
+
+
+4. أنشطة اجتماعية: يمكن تضمين أنشطة للتواصل مثل ألعاب بسيطة أو أسئلة تعزز من التفاعل والمشاركة بين الأصدقاء.
+
+
+5. إعدادات خصوصية: ضمان خصوصي
+
+الهدف:
+
+توفير أداة مرنة وسهلة للمستخدمين لتنسيق لقاءاتهم مع أحبائهم وأصدقائهم، مما يساهم في تعزيز الروابط الاجتماعية ويساعد في تبادل اللحظات الجميلة.
+
+هل تعجبك هذه الفكرة؟ إذا كنت ترغب، يمكننا البدء بتفاصيل كيفية تطويرها خطوة بخطوة!
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تطبيق لقاء الأحبة</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>مرحبًا بك في تطبيق لقاء الأحبة</h1>
+    <p>حدد مكانًا وزمانًا للقاء أصدقائك!</p>
+  </header>
+
+  <div id="meeting-form">
+    <label for="location">المكان:</label>
+    <input type="text" id="location" placeholder="أدخل المكان">
+    
+    <label for="time">الوقت:</label>
+    <input type="datetime-local" id="time">
+    
+    <button id="create-meeting">إنشاء اللقاء</button>
+  </div>
+
+  <div id="meeting-details">
+    <h2>تفاصيل اللقاء</h2>
+    <p id="meeting-location"></p>
+    <p id="meeting-time"></p>
+  </div>
+
+  <div id="map"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-firestore.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap&libraries=places" async defer></script>
+  <script src="script.js"></script>
+</body>
+</html>
+
+Code Css 
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: #f3f3f3;
+}
+
+header {
+  margin: 20px;
+}
+
+#meeting-form {
+  margin: 20px;
+}
+
+#map {
+  width: 100%;
+  height: 400px;
+}
+ Code JavaScript 
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Google Maps API setup
+let map;
+let marker;
+
+function initMap() {
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 24.7136, lng: 46.6753 },
+    zoom: 10,
+  });
+
+  map.addListener("click", function (event) {
+    if (marker) {
+      marker.setMap(null);
+    }
+    marker = new google.maps.Marker({
+      position: event.latLng,
+      map: map,
+      title: "موقع اللقاء",
+    });
+  });
+}
+
+// Create meeting
+document.getElementById("create-meeting").addEventListener("click", function () {
+  const location = document.getElementById("location").value;
+  const time = document.getElementById("time").value;
+  
+  if (location && time && marker) {
+    db.collection("meetings").add({
+      location: location,
+      time: time,
+      lat: marker.getPosition().lat(),
+      lng: marker.getPosition().lng(),
+    }).then(function (docRef) {
+      document.getElementById("meeting-location").innerText = `المكان: ${location}`;
+      document.getElementById("meeting-time").innerText = `الوقت: ${time}`;
+      alert("تم إنشاء اللقاء بنجاح!");
+    }).catch(function (error) {
+      console.error("خطأ في إضافة اللقاء: ", error);
+    });
+  } else {
+    alert("يرجى ملء جميع الحقول!");
+  }
+});
