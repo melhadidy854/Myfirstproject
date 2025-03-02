@@ -1,0 +1,176 @@
+ خليني أبدأ معاك بتقسيم التطبيق إلى أجزاء صغيرة، وكل جزء هتتعلم فيه خطوة بخطوة. في البداية، هنبدأ بتطبيق "التطبيق التحفيزي الشخصي"، وهو تطبيق بسيط لعرض الرسائل التحفيزية والتذكيرات.
+
+التقسيم الأساسي للتطبيق:
+
+1. إعداد واجهة المستخدم (UI)
+
+
+2. إضافة الرسائل التحفيزية
+
+
+3. إعداد قاعدة البيانات لتخزين الأهداف والتقدم
+
+
+4. إضافة التنبيهات التذكيرية
+
+
+5. إضافة ميزة تتبع الأهداف الشخصية
+
+
+
+1. إعداد واجهة المستخدم (UI)
+
+إحنا هنحتاج إلى شاشة رئيسية لعرض الرسائل التحفيزية وشاشة لإضافة الأهداف. هنستخدم لغة Kotlin في التطبيق. نبدأ ببناء الواجهة باستخدام XML (في Android Studio).
+
+<!-- main_activity.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+    
+    <!-- TextView for motivational quote -->
+    <TextView
+        android:id="@+id/quoteTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Welcome! Get motivated!"
+        android:textSize="18sp"
+        android:gravity="center"/>
+
+    <!-- Button to Add New Goal -->
+    <Button
+        android:id="@+id/addGoalButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add Goal"
+        android:layout_marginTop="16dp"/>
+
+</LinearLayout>
+
+2. إضافة الرسائل التحفيزية
+
+سنضيف مجموعة من الاقتباسات التحفيزية التي سيظهرها التطبيق عند تشغيله.
+
+// MainActivity.kt
+class MainActivity : AppCompatActivity() {
+
+    private val quotes = listOf(
+        "The only way to do great work is to love what you do.",
+        "Believe you can and you're halfway there.",
+        "Don’t watch the clock; do what it does. Keep going.",
+        "Success is not final, failure is not fatal: It is the courage to continue that counts."
+    )
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        val quoteTextView = findViewById<TextView>(R.id.quoteTextView)
+        quoteTextView.text = quotes.random()
+
+        val addGoalButton = findViewById<Button>(R.id.addGoalButton)
+        addGoalButton.setOnClickListener {
+            // Move to goal adding screen
+        }
+    }
+}
+
+3. إعداد قاعدة البيانات لتخزين الأهداف والتقدم
+
+سنستخدم SQLite أو Room Database لتخزين الأهداف.
+
+3.1 إعداد قاعدة البيانات (Room Database)
+
+أولًا، أضف المكتبة إلى ملف build.gradle:
+
+dependencies {
+    implementation "androidx.room:room-runtime:2.4.2"
+    annotationProcessor "androidx.room:room-compiler:2.4.2"
+}
+
+ثم نخلق Entity لتخزين الأهداف:
+
+@Entity(tableName = "goals")
+data class Goal(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val goalTitle: String,
+    val progress: Int
+)
+
+ثم نكتب DAO للتفاعل مع قاعدة البيانات:
+
+@Dao
+interface GoalDao {
+    @Insert
+    suspend fun insertGoal(goal: Goal)
+
+    @Query("SELECT * FROM goals")
+    suspend fun getAllGoals(): List<Goal>
+}
+
+4. إضافة التنبيهات التذكيرية
+
+هنضيف التنبيهات لذكر الأهداف بشكل دوري.
+
+fun setReminder(context: Context) {
+    val intent = Intent(context, ReminderReceiver::class.java)
+    val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0)
+
+    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+    val interval: Long = 60 * 60 * 1000 // 1 hour
+
+    alarmManager.setInexactRepeating(
+        AlarmManager.RTC_WAKEUP,
+        System.currentTimeMillis(),
+        interval,
+        pendingIntent
+    )
+}
+
+5. إضافة ميزة تتبع الأهداف الشخصية
+
+هنضيف صفحة لعرض الأهداف التي قام المستخدم بإضافتها وتتبع التقدم.
+
+// AddGoalActivity.kt
+class AddGoalActivity : AppCompatActivity() {
+
+    private lateinit var goalEditText: EditText
+    private lateinit var saveGoalButton: Button
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_add_goal)
+
+        goalEditText = findViewById(R.id.goalEditText)
+        saveGoalButton = findViewById(R.id.saveGoalButton)
+
+        saveGoalButton.setOnClickListener {
+            val goalTitle = goalEditText.text.toString()
+            val goal = Goal(goalTitle = goalTitle, progress = 0)
+            GlobalScope.launch {
+                goalDao.insertGoal(goal)
+            }
+            finish()
+        }
+    }
+}
+
+
+---
+
+ملخص التطبيق:
+
+الواجهة: لعرض الرسائل التحفيزية وإضافة الأهداف.
+
+قاعدة البيانات: لتخزين الأهداف والتقدم.
+
+التنبيهات: لإرسال التذكيرات.
+
+التطبيق كامل: يتيح للمستخدم إضافة أهدافه وتلقي رسائل تحفيزية.
+
+
+
+---
+
+
