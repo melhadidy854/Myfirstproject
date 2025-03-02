@@ -1,0 +1,13 @@
+# برنامج لحساب متوسط الأعداد
+def calculate_average():
+    numbers = []
+    num_count = int(input("كم عدد الأرقام التي تريد إدخالها؟ "))
+    
+    for i in range(num_count):
+        number = float(input(f"أدخل الرقم {i+1}: "))
+        numbers.append(number)
+    
+    average = sum(numbers) / len(numbers)
+    print(f"المتوسط هو: {average}")
+
+calculate_average()
